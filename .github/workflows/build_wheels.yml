@@ -1,4 +1,4 @@
-name: PyPI
+name: Build & Publish to PyPI
 
 on:
   workflow_dispatch:
@@ -9,11 +9,8 @@ on:
         required: true
         default: 'TESTPYPI'
         options: [ 'TESTPYPI', 'PYPI' ]
-      version:
-        type: string
-        description: 'Version tag'
-        required: true
-        default: '3.1'
+  release:
+    types: [published]
 
 jobs:
   build_wheels:
@@ -22,7 +19,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest , windows-latest, macos-latest ]
+        # macos-14 = Apple Silicon (M1), ubuntu-latest = x86_64, windows-latest = x64
+        os: [ ubuntu-latest, windows-latest, macos-14 ]
         python: [ "cp310", "cp311", "cp312", "cp313" ]
         arch: [ auto64 ]
 
@@ -32,11 +30,10 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-          ref: ${{ github.event.inputs.version }}
 
       - name: Set Xcode version
         uses: maxim-lobanov/setup-xcode@v1
-        if: ${{ matrix.os == 'macos-latest' }}
+        if: ${{ startsWith(matrix.os, 'macos') }}
         with:
           xcode-version: latest-stable
 
@@ -45,6 +42,7 @@ jobs:
         uses: pypa/cibuildwheel@v3.3.0
         env:
           CIBW_ARCHS_LINUX: ${{ matrix.arch }}
+          # Build ARM64 first (primary target), then x86_64
           CIBW_ARCHS_MACOS: arm64 x86_64
           CIBW_BUILD: "${{ matrix.python }}-*"
           CIBW_SKIP: "*-musllinux_*"
@@ -65,7 +63,7 @@ jobs:
       - name: Store artifacts
         uses: actions/upload-artifact@v5
         with:
-          name: my-artifact-${{ matrix.os }}-${{ matrix.python }}-${{ matrix.arch }}.whl
+          name: wheels-${{ matrix.os }}-${{ matrix.python }}-${{ matrix.arch }}
           path: ./wheelhouse/*.whl
 
   build_sdist:
@@ -76,48 +74,55 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-          ref: ${{ github.event.inputs.version }}
 
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.11'
+          python-version: '3.12'
+
       - name: Build sdist
         run: |
           pip install -U pip setuptools build
           python -m build --sdist
-      - name: upload sdist
+
+      - name: Upload sdist
         uses: actions/upload-artifact@v5
         with:
-          name: my-artifact-sdist
+          name: wheels-sdist
           path: ./dist/*.tar.gz
 
   upload_pypi:
     needs: [ build_wheels, build_sdist ]
     runs-on: ubuntu-latest
+    # Only publish on release events or manual workflow dispatch
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    permissions:
+      id-token: write  # Required for trusted publishing
     steps:
       - name: Download All Artifacts
         uses: actions/download-artifact@v6
         with:
-          pattern: my-artifact-*
-          path: artifacts/
+          pattern: wheels-*
+          path: dist/
           merge-multiple: true
+
       - name: Display structure of downloaded files
-        run: ls -R artifacts
+        run: ls -R dist
+
       - name: Publish to PyPI
-        if: ${{ github.event.inputs.target  == 'PYPI' }}
+        if: >-
+          github.event_name == 'release' ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'PYPI')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.PYPI_TOKEN }}
-          packages-dir: artifacts/
-      - name: Publish to PyPI - Test
-        if: ${{ github.event.inputs.target  == 'TESTPYPI' }}
+          packages-dir: dist/
+
+      - name: Publish to TestPyPI
+        if: >-
+          github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'TESTPYPI'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.TESTPYPI_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
           skip-existing: true
           verbose: true
-          packages-dir: artifacts/
+          packages-dir: dist/

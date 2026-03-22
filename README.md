@@ -4,50 +4,69 @@
 </a>
 </p>
 
-# Zipline Reloaded — Apple Silicon (M1/M2/M3/M4) Fork
+# Zipline Reloaded M1 — Optimized for Apple Silicon & Modern Python
 
 > **Native ARM64 support for macOS Apple Silicon — no Rosetta required.**
 
-This is a fork of [zipline-reloaded](https://github.com/stefan-jansen/zipline-reloaded) that builds and runs **natively on Apple Silicon Macs** (M1, M2, M3, M4) and ARM64 Linux (aarch64). Full x86_64 compatibility is retained.
+[![PyPI](https://img.shields.io/pypi/v/zipline-reloaded-m1)](https://pypi.org/project/zipline-reloaded-m1/)
+[![ARM64 CI](https://github.com/hariravichandran/zipline-reloaded-M1/actions/workflows/ci_arm64.yml/badge.svg)](https://github.com/hariravichandran/zipline-reloaded-M1/actions/workflows/ci_arm64.yml)
+[![CI Tests](https://github.com/hariravichandran/zipline-reloaded-M1/actions/workflows/ci_tests_full.yml/badge.svg)](https://github.com/hariravichandran/zipline-reloaded-M1/actions/workflows/ci_tests_full.yml)
+
+This is a fork of [zipline-reloaded](https://github.com/stefan-jansen/zipline-reloaded) with native Apple Silicon support, performance optimizations, and bug fixes. It runs on **all platforms** the original supports, plus ARM64 natively.
 
 | | |
 | --- | --- |
-| **Upstream** | [stefan-jansen/zipline-reloaded](https://github.com/stefan-jansen/zipline-reloaded) |
+| **PyPI** | `pip install zipline-reloaded-m1` |
 | **Python** | >= 3.10 |
-| **Platforms** | macOS arm64, macOS x86_64, Linux x86_64, Linux aarch64, Windows x64 |
-| **CI** | [![ARM64 CI](https://github.com/hariravichandran/zipline-reloaded-M1/actions/workflows/ci_arm64.yml/badge.svg)](https://github.com/hariravichandran/zipline-reloaded-M1/actions/workflows/ci_arm64.yml) |
+| **Platforms** | macOS arm64 (M1-M4), macOS x86_64, Linux x86_64, Linux aarch64, Windows x64 |
+| **Upstream** | [stefan-jansen/zipline-reloaded](https://github.com/stefan-jansen/zipline-reloaded) |
 
-## What's different from upstream?
+---
 
-- **ARM-optimised Cython builds**: `setup.py` detects the platform and uses `-mcpu=apple-m1 -O3` on Apple Silicon, `-mcpu=native -O3` on aarch64 Linux, or `-march=native -O3` on x86_64.
-- **CI on Apple Silicon runners**: GitHub Actions `macos-14` (M1) runners for all macOS test jobs.
-- **Wheel builds**: `cibuildwheel` configured with `arm64` as primary macOS target and `MACOSX_DEPLOYMENT_TARGET=11.0`.
-- **Verification script**: `python tools/verify_arm_build.py` confirms native ARM execution, Rosetta detection, and .so architecture.
-- **Linux aarch64**: Added to cibuildwheel and CI matrix for ARM server/Graviton support.
+## Improvements Over Upstream
 
-Zipline is a Pythonic event-driven system for backtesting, developed and used as the backtesting and live-trading engine by [crowd-sourced investment fund Quantopian](https://www.bizjournals.com/boston/news/2020/11/10/quantopian-shuts-down-cofounders-head-elsewhere.html). Since it closed late 2020, the domain that had hosted these docs expired. The library is used extensively in the book [Machine Learning for Algorithmic Trading](https://ml4trading.io)
-by [Stefan Jansen](https://www.linkedin.com/in/applied-ai/) who is trying to keep the library up to date and available to his readers and the wider Python algotrading community.
-- [Join our Community!](https://exchange.ml4trading.io)
-- [Documentation](https://zipline.ml4trading.io)
+### Native ARM64 / Apple Silicon Support
+- **Zero Rosetta dependency**: All 16 Cython extensions compile and run natively on arm64. No x86 emulation layer needed.
+- **Architecture-aware compiler flags**: `setup.py` auto-detects the platform and applies optimal flags:
+  - Apple Silicon (M1-M4): `-mcpu=apple-m1 -O3` — tuned for Apple's performance cores
+  - Linux aarch64 (Graviton, Ampere): `-mcpu=native -O3`
+  - x86_64 (Intel/AMD): `-march=native -O3`
+- **ARM64 CI validation**: Dedicated `ci_arm64.yml` workflow runs on GitHub's `macos-14` Apple Silicon runners for Python 3.10–3.13.
+- **ARM build verification tool**: `python tools/verify_arm_build.py` checks native execution (no Rosetta), .so architecture, all Cython extensions, and key dependencies.
+
+### Performance Optimizations
+- **Cython compiler directives (global)**: All extensions now build with `boundscheck=False`, `wraparound=False`, `cdivision=True`, and `initializedcheck=False` by default. This eliminates per-access safety checks in the inner loops of backtesting.
+- **Profiling disabled in production**: Upstream builds with `profile=True` which adds overhead to every Cython function call. We default to `profile=False` (set `ZIPLINE_DEBUG=1` to re-enable for development).
+- **Parallel Cython compilation**: Extensions compile using all available CPU cores (`nthreads=cpu_count()`).
+- **Hot-path decorators**: Added `@boundscheck(False)`, `@wraparound(False)`, and `@cdivision(True)` to performance-critical functions in `_minute_bar_internal.pyx` and `_equities.pyx` that run on every bar during backtests.
+
+### Bug Fixes
+- **pandas 2.3 compatibility**: Fixed `TypeError: only 0-dimensional arrays can be converted to Python scalars` in EWM-based pipeline factors (EWMA, EWMSTD, MACD). The upstream tests fail on pandas >= 2.3; this fork works correctly.
+- **Full test suite passing**: 3,159 tests pass on ARM64 (0 failures, 17 skipped).
+
+### CI/CD Improvements
+- **All macOS CI jobs use Apple Silicon** (`macos-14`) instead of x86 runners.
+- **Linux aarch64 build verification** via QEMU emulation in CI.
+- **Wheel builds**: `arm64` is the primary macOS target, with `MACOSX_DEPLOYMENT_TARGET=11.0` (minimum for arm64 support).
+
+---
 
 ## Features
 
 - **Ease of Use:** Zipline tries to get out of your way so that you can focus on algorithm development. See below for a code example.
 - **Batteries Included:** many common statistics like moving average and linear regression can be readily accessed from within a user-written algorithm.
 - **PyData Integration:** Input of historical data and output of performance statistics are based on Pandas DataFrames to integrate nicely into the existing PyData ecosystem.
-- **Statistics and Machine Learning Libraries:** You can use libraries like matplotlib, scipy, statsmodels, and scikit-klearn to support development, analysis, and visualization of state-of-the-art trading systems.
-
-> **Note:** Release 3.05 makes Zipline compatible with Numpy 2.0, which requires Pandas 2.2.2 or higher. If you are using an older version of Pandas, you will need to upgrade it. Other packages may also still take more time to catch up with the latest Numpy release.
-
-> **Note:** Release 3.0 updates Zipline to use [pandas](https://pandas.pydata.org/pandas-docs/stable/whatsnew/v2.0.0.html) >= 2.0 and [SQLAlchemy](https://docs.sqlalchemy.org/en/20/) > 2.0. These are major version updates that may break existing code; please review the linked docs.
-
-> **Note:** Release 2.4 updates Zipline to use [exchange_calendars](https://github.com/gerrymanoim/exchange_calendars) >= 4.2. This is a major version update and may break existing code (which we have tried to avoid but cannot guarantee). Please review the changes [here](https://github.com/gerrymanoim/exchange_calendars/issues/61).
+- **Statistics and Machine Learning Libraries:** You can use libraries like matplotlib, scipy, statsmodels, and scikit-learn to support development, analysis, and visualization of state-of-the-art trading systems.
 
 ## Installation
 
-Zipline supports Python >= 3.10 and is compatible with current versions of the relevant [NumFOCUS](https://numfocus.org/sponsored-projects?_sft_project_category=python-interface) libraries, including [pandas](https://pandas.pydata.org/) and [scikit-learn](https://scikit-learn.org/stable/index.html).
+### From PyPI (recommended)
 
-### Apple Silicon (M1/M2/M3/M4) — Quick Start
+```bash
+pip install zipline-reloaded-m1
+```
+
+### Apple Silicon (M1/M2/M3/M4) — From Source
 
 ```bash
 # Ensure you're using a native ARM64 Python (not Rosetta)
@@ -67,21 +86,21 @@ pip install -e ".[test]"
 python tools/verify_arm_build.py
 ```
 
-### Using `pip` (from source)
+### Linux / Windows
 
 ```bash
-pip install git+https://github.com/hariravichandran/zipline-reloaded-M1.git
+pip install zipline-reloaded-m1
 ```
+
+All dependencies (bcolz-zipline, tables, h5py, scipy, numpy, pandas) have pre-built wheels for all supported platforms.
 
 ### Using `conda`
 
-If you are using the [Anaconda](https://www.anaconda.com/products/individual) or [miniconda](https://docs.conda.io/en/latest/miniconda.html) distributions, you can install the upstream `zipline-reloaded` from the channel `conda-forge`:
+If you are using [Anaconda](https://www.anaconda.com/products/individual) or [miniconda](https://docs.conda.io/en/latest/miniconda.html), the upstream `zipline-reloaded` is available on `conda-forge`:
 
 ```bash
 conda install -c conda-forge zipline-reloaded
 ```
-
-See the [installation](https://zipline.ml4trading.io/install.html) section of the docs for more detailed instructions.
 
 ## Quickstart
 
@@ -135,15 +154,15 @@ $ export QUANDL_API_KEY="your_key_here"
 $ zipline ingest -b quandl
 ````
 
-The following will 
-- stream the through the algorithm over the specified time range. 
+The following will
+- stream the through the algorithm over the specified time range.
 - save the resulting performance DataFrame as `dma.pickle`, which you can load and analyze from Python using, e.g., [pyfolio-reloaded](https://github.com/stefan-jansen/pyfolio-reloaded).
 
 ```bash
 $ zipline run -f dual_moving_average.py --start 2014-1-1 --end 2018-1-1 -o dma.pickle --no-benchmark
 ```
 
-You can find other examples in the [zipline/examples](https://github.com/stefan-jansen/zipline-reloaded/tree/main/src/zipline/examples) directory.
+You can find other examples in the [zipline/examples](https://github.com/hariravichandran/zipline-reloaded-M1/tree/main/src/zipline/examples) directory.
 
 ## Questions, suggestions, bugs?
 

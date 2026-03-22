@@ -1,16 +1,16 @@
 [project]
-name = 'zipline-reloaded'
-description = 'A Pythonic backtester for trading algorithms'
+name = 'zipline-reloaded-m1'
+description = 'A Pythonic backtester for trading algorithms — native Apple Silicon (M1–M4) and multi-platform support with performance optimizations'
 readme = 'README.md'
 dynamic = ["version"]
 
 authors = [
     { name = 'Quantopian Inc' },
     { email = 'pm@ml4trading.io' },
+    { name = 'Hari Ravichandran' },
 ]
 maintainers = [
-    { name = 'Stefan Jansen' },
-    { email = 'pm@ml4trading.io' },
+    { name = 'Hari Ravichandran' },
 ]
 
 classifiers = [
@@ -136,7 +136,8 @@ exclude = ['tests*']
 [tool.setuptools_scm]
 write_to = "src/zipline/_version.py"
 version_scheme = 'guess-next-dev'
-local_scheme = 'dirty-tag'
+local_scheme = 'no-local-version'
+fallback_version = '4.0.0'
 
 [tool.setuptools.package-data]
 "*" = [

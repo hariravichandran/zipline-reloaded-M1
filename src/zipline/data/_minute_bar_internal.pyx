@@ -5,6 +5,8 @@ cimport cython
 
 cdef inline int int_min(int a, int b): return a if a <= b else b
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 @cython.cdivision(True)
 def minute_value(ndarray[int64_t, ndim=1] market_opens,
                  Py_ssize_t pos,
@@ -34,6 +36,9 @@ def minute_value(ndarray[int64_t, ndim=1] market_opens,
 
     return market_opens[q] + r
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
 def find_position_of_minute(ndarray[int64_t, ndim=1] market_opens,
                             ndarray[int64_t, ndim=1] market_closes,
                             int64_t minute_val,
@@ -85,6 +90,9 @@ def find_position_of_minute(ndarray[int64_t, ndim=1] market_opens,
 
     return (market_open_loc * minutes_per_day) + delta
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
 def find_last_traded_position_internal(
         ndarray[int64_t, ndim=1] market_opens,
         ndarray[int64_t, ndim=1] market_closes,

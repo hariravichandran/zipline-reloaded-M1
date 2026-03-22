@@ -76,9 +76,21 @@ def window_specialization(typename):
     )
 
 
+# Performance: disable profiling overhead in production builds.
+# Set ZIPLINE_DEBUG=1 to re-enable profiling and annotation.
+import os as _os
+_debug = _os.environ.get("ZIPLINE_DEBUG", "0") == "1"
 ext_options = dict(
-    compiler_directives=dict(profile=True, language_level="3"),
-    annotate=True,
+    compiler_directives=dict(
+        language_level="3",
+        profile=_debug,
+        boundscheck=False,
+        wraparound=False,
+        cdivision=True,
+        initializedcheck=False,
+    ),
+    annotate=_debug,
+    nthreads=_os.cpu_count() or 1,
 )
 ext_modules = [
     _make_extension("zipline.assets._assets",

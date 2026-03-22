@@ -41,6 +41,7 @@ ctypedef object Int64Index_t
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
+@cython.cdivision(True)
 cpdef _compute_row_slices(dict asset_starts_absolute,
                           dict asset_ends_absolute,
                           dict asset_starts_calendar,
