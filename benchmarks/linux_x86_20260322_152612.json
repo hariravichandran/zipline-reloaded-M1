@@ -1,0 +1,115 @@
+{
+  "timestamp": "2026-03-22T15:26:12.307087Z",
+  "hardware_profile": {
+    "name": "linux_x86",
+    "arch": "x86_64",
+    "system": "linux",
+    "cpu_name": "AMD Ryzen 9 6900HX with Radeon Graphics",
+    "physical_cores": 16,
+    "logical_cores": 16,
+    "ram_gb": 28.1,
+    "blas_provider": "openblas",
+    "capabilities": [
+      "avx2",
+      "multicore",
+      "openblas"
+    ],
+    "optimal_threads": 16
+  },
+  "python_version": "3.12.3",
+  "numpy_version": "2.4.3",
+  "pandas_version": "2.3.3",
+  "benchmarks": {
+    "rank_ordinal_500x100": {
+      "median_ms": 1.08997500001351,
+      "min_ms": 1.0637670000051003,
+      "max_ms": 1.1027590000480814,
+      "runs": 5
+    },
+    "rank_ordinal_2000x500": {
+      "median_ms": 40.05187500001739,
+      "min_ms": 39.86217400000669,
+      "max_ms": 40.58728499995823,
+      "runs": 3
+    },
+    "rank_average_500x100": {
+      "median_ms": 1.2225709999711398,
+      "min_ms": 1.2005199999975957,
+      "max_ms": 1.250391999974454,
+      "runs": 5
+    },
+    "factorize_10k": {
+      "median_ms": 0.2671639999789477,
+      "min_ms": 0.25901899999780653,
+      "max_ms": 0.2974500000050284,
+      "runs": 5
+    },
+    "factorize_100k": {
+      "median_ms": 2.229052000018328,
+      "min_ms": 2.1862219999775334,
+      "max_ms": 2.2604900000260386,
+      "runs": 3
+    },
+    "window_500x100_w20": {
+      "median_ms": 0.2779939999868475,
+      "min_ms": 0.27598000002626577,
+      "max_ms": 0.29545600000346894,
+      "runs": 5
+    },
+    "window_2000x500_w20": {
+      "median_ms": 1.1225249999711195,
+      "min_ms": 1.0899249999738458,
+      "max_ms": 1.1292589999811753,
+      "runs": 3
+    },
+    "adjustment_mutate_100x50": {
+      "median_ms": 0.0016629999777251214,
+      "min_ms": 0.0015729999631730607,
+      "max_ms": 0.0028160000056232093,
+      "runs": 5
+    },
+    "nanmean_252x500": {
+      "median_ms": 0.12046300003021315,
+      "min_ms": 0.11961199999177552,
+      "max_ms": 0.13313599998809877,
+      "runs": 5
+    },
+    "nanstd_252x500": {
+      "median_ms": 0.2729049999743438,
+      "min_ms": 0.2661720000105561,
+      "max_ms": 0.29286199998068696,
+      "runs": 5
+    },
+    "argsort_stable_2000x500": {
+      "median_ms": 33.636500999989494,
+      "min_ms": 33.513713999980155,
+      "max_ms": 33.82928799999263,
+      "runs": 3
+    },
+    "argsort_quick_2000x500": {
+      "median_ms": 11.26473099998293,
+      "min_ms": 11.20232600004556,
+      "max_ms": 11.264750999998796,
+      "runs": 3
+    },
+    "matmul_500x500": {
+      "median_ms": 2.981042999977035,
+      "min_ms": 2.878924000015104,
+      "max_ms": 3.081458999986353,
+      "runs": 5
+    },
+    "linregress_252x100": {
+      "median_ms": 25.220477999994273,
+      "min_ms": 19.7937020000154,
+      "max_ms": 25.606681999988723,
+      "runs": 3
+    },
+    "import_zipline": {
+      "median_ms": 0.015037999958167347,
+      "min_ms": 0.015037999958167347,
+      "max_ms": 0.015037999958167347,
+      "runs": 1,
+      "note": "single run (import is cached after first)"
+    }
+  }
+}
