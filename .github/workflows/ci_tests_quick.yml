@@ -39,7 +39,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-14]
         python-version: ["3.12"]
 
     steps:
@@ -57,7 +57,7 @@ jobs:
           sudo ./tools/install_talib.sh
 
       - name: Install TA-Lib HDF5 c-blosc
-        if: ${{ matrix.os == 'macos-latest' }}
+        if: ${{ startsWith(matrix.os, 'macos') }}
         run: |
           brew install ta-lib
           brew install hdf5

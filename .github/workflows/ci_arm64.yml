@@ -1,0 +1,126 @@
+name: CI - ARM64 (Apple Silicon + Linux aarch64)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  macos-arm64:
+    name: macOS ARM64 - Python ${{ matrix.python-version }}
+    # macos-14+ runners are Apple Silicon (M1)
+    runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Verify ARM64 architecture
+        run: |
+          echo "Machine: $(uname -m)"
+          if [ "$(uname -m)" != "arm64" ]; then
+            echo "ERROR: Not running on ARM64!"
+            exit 1
+          fi
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install system dependencies
+        run: |
+          brew install hdf5 c-blosc
+          # ta-lib is optional but nice to have
+          brew install ta-lib || true
+
+      - name: Install zipline
+        run: |
+          python -VV
+          python -c "import platform; print(f'Architecture: {platform.machine()}')"
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -e ".[test]"
+
+      - name: Verify Cython extensions compiled for ARM64
+        run: |
+          python -c "
+          import platform
+          assert platform.machine() == 'arm64', f'Expected arm64, got {platform.machine()}'
+
+          # Verify all Cython extensions load
+          from zipline.lib.adjustment import Float64Multiply
+          from zipline.lib.rank import rankdata_2d_ordinal
+          from zipline.assets._assets import Asset
+          from zipline.gens.sim_engine import MinuteSimulationClock
+          import zipline.finance._finance_ext
+          from zipline._protocol import BarData
+          from zipline.data.bcolz_daily_bars import BcolzDailyBarReader
+          from zipline.data.bcolz_minute_bars import BcolzMinuteBarReader
+
+          # Verify .so files are arm64
+          import zipline.lib.rank as rank_mod
+          so_path = rank_mod.__file__
+          assert 'arm64' in so_path or 'darwin' in so_path, f'Unexpected .so path: {so_path}'
+
+          print('All Cython extensions loaded successfully on ARM64')
+          "
+
+      - name: Run tests
+        env:
+          MPLBACKEND: Agg
+          GITHUB_ACTIONS: true
+          TZ: UTC
+        run: |
+          pytest -n auto --reruns 2 --dist=loadgroup \
+            --strict-markers --disable-warnings \
+            --tb=short --maxfail=30 \
+            -q tests/
+
+  linux-aarch64-build:
+    name: Linux aarch64 - Build verification
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU for aarch64 emulation
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Build and test in aarch64 container
+        uses: uraimo/run-on-arch-action@v3
+        with:
+          arch: aarch64
+          distro: ubuntu22.04
+          run: |
+            apt-get update
+            apt-get install -y python3 python3-pip python3-venv python3-dev \
+              build-essential libhdf5-dev libblosc-dev pkg-config
+            python3 -m venv /tmp/venv
+            . /tmp/venv/bin/activate
+            pip install --upgrade pip setuptools wheel
+            pip install -e ".[test]"
+            python3 -c "
+            import platform
+            print(f'Architecture: {platform.machine()}')
+            import zipline
+            print(f'Zipline imported OK on {platform.machine()}')
+            "

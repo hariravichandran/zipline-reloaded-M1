@@ -4,14 +4,28 @@
 </a>
 </p>
 
-# Backtest your Trading Strategies
+# Zipline Reloaded — Apple Silicon (M1/M2/M3/M4) Fork
 
-| Version Info        | [![Python](https://img.shields.io/pypi/pyversions/zipline-reloaded.svg?cacheSeconds=2592000)](https://pypi.python.org/pypi/zipline-reloaded) [![Anaconda-Server Badge](https://anaconda.org/ml4t/zipline-reloaded/badges/platforms.svg)](https://anaconda.org/ml4t/zipline-reloaded) ![PyPI](https://img.shields.io/pypi/v/zipline-reloaded) [![Anaconda-Server Badge](https://anaconda.org/conda-forge/zipline-reloaded/badges/version.svg)](https://anaconda.org/conda-forge/zipline-reloaded)                                                                                                                                                                                                 |
-| ------------------- | ---------- |
-| **Test** **Status** | [![CI Tests](https://github.com/stefan-jansen/zipline-reloaded/actions/workflows/ci_tests_full.yml/badge.svg)](https://github.com/stefan-jansen/zipline-reloaded/actions/workflows/unit_tests.yml) [![PyPI](https://github.com/stefan-jansen/zipline-reloaded/actions/workflows/build_wheels.yml/badge.svg)](https://github.com/stefan-jansen/zipline-reloaded/actions/workflows/build_wheels.yml)  [![codecov](https://codecov.io/gh/stefan-jansen/zipline-reloaded/branch/main/graph/badge.svg)](https://codecov.io/gh/stefan-jansen/zipline-reloaded) |
-| **Community**       | [![Discourse](https://img.shields.io/discourse/topics?server=https%3A%2F%2Fexchange.ml4trading.io%2F)](https://exchange.ml4trading.io) [![ML4T](https://img.shields.io/badge/Powered%20by-ML4Trading-blue)](https://ml4trading.io) [![Twitter](https://img.shields.io/twitter/follow/ml4trading.svg?style=social)](https://twitter.com/ml4trading)                                                                                                                                                                                                                                                                                                                                                                                                          |
+> **Native ARM64 support for macOS Apple Silicon — no Rosetta required.**
 
-Zipline is a Pythonic event-driven system for backtesting, developed and used as the backtesting and live-trading engine by [crowd-sourced investment fund Quantopian](https://www.bizjournals.com/boston/news/2020/11/10/quantopian-shuts-down-cofounders-head-elsewhere.html). Since it closed late 2020, the domain that had hosted these docs expired. The library is used extensively in the book [Machine Larning for Algorithmic Trading](https://ml4trading.io)
+This is a fork of [zipline-reloaded](https://github.com/stefan-jansen/zipline-reloaded) that builds and runs **natively on Apple Silicon Macs** (M1, M2, M3, M4) and ARM64 Linux (aarch64). Full x86_64 compatibility is retained.
+
+| | |
+| --- | --- |
+| **Upstream** | [stefan-jansen/zipline-reloaded](https://github.com/stefan-jansen/zipline-reloaded) |
+| **Python** | >= 3.10 |
+| **Platforms** | macOS arm64, macOS x86_64, Linux x86_64, Linux aarch64, Windows x64 |
+| **CI** | [![ARM64 CI](https://github.com/hariravichandran/zipline-reloaded-M1/actions/workflows/ci_arm64.yml/badge.svg)](https://github.com/hariravichandran/zipline-reloaded-M1/actions/workflows/ci_arm64.yml) |
+
+## What's different from upstream?
+
+- **ARM-optimised Cython builds**: `setup.py` detects the platform and uses `-mcpu=apple-m1 -O3` on Apple Silicon, `-mcpu=native -O3` on aarch64 Linux, or `-march=native -O3` on x86_64.
+- **CI on Apple Silicon runners**: GitHub Actions `macos-14` (M1) runners for all macOS test jobs.
+- **Wheel builds**: `cibuildwheel` configured with `arm64` as primary macOS target and `MACOSX_DEPLOYMENT_TARGET=11.0`.
+- **Verification script**: `python tools/verify_arm_build.py` confirms native ARM execution, Rosetta detection, and .so architecture.
+- **Linux aarch64**: Added to cibuildwheel and CI matrix for ARM server/Graviton support.
+
+Zipline is a Pythonic event-driven system for backtesting, developed and used as the backtesting and live-trading engine by [crowd-sourced investment fund Quantopian](https://www.bizjournals.com/boston/news/2020/11/10/quantopian-shuts-down-cofounders-head-elsewhere.html). Since it closed late 2020, the domain that had hosted these docs expired. The library is used extensively in the book [Machine Learning for Algorithmic Trading](https://ml4trading.io)
 by [Stefan Jansen](https://www.linkedin.com/in/applied-ai/) who is trying to keep the library up to date and available to his readers and the wider Python algotrading community.
 - [Join our Community!](https://exchange.ml4trading.io)
 - [Documentation](https://zipline.ml4trading.io)
@@ -31,29 +45,43 @@ by [Stefan Jansen](https://www.linkedin.com/in/applied-ai/) who is trying to kee
 
 ## Installation
 
-Zipline supports Python >= 3.9 and is compatible with current versions of the relevant [NumFOCUS](https://numfocus.org/sponsored-projects?_sft_project_category=python-interface) libraries, including [pandas](https://pandas.pydata.org/) and [scikit-learn](https://scikit-learn.org/stable/index.html).
+Zipline supports Python >= 3.10 and is compatible with current versions of the relevant [NumFOCUS](https://numfocus.org/sponsored-projects?_sft_project_category=python-interface) libraries, including [pandas](https://pandas.pydata.org/) and [scikit-learn](https://scikit-learn.org/stable/index.html).
 
-### Using `pip`
-
-If your system meets the pre-requisites described in the [installation instructions](https://zipline.ml4trading.io/install.html), you can install Zipline using `pip` by running:
+### Apple Silicon (M1/M2/M3/M4) — Quick Start
 
 ```bash
-pip install zipline-reloaded
+# Ensure you're using a native ARM64 Python (not Rosetta)
+python3 -c "import platform; print(platform.machine())"  # should print "arm64"
+
+# Install system dependencies
+brew install hdf5 c-blosc
+
+# Clone and install
+git clone https://github.com/hariravichandran/zipline-reloaded-M1.git
+cd zipline-reloaded-M1
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[test]"
+
+# Verify the build is ARM-native
+python tools/verify_arm_build.py
+```
+
+### Using `pip` (from source)
+
+```bash
+pip install git+https://github.com/hariravichandran/zipline-reloaded-M1.git
 ```
 
 ### Using `conda`
 
-If you are using the [Anaconda](https://www.anaconda.com/products/individual) or [miniconda](https://docs.conda.io/en/latest/miniconda.html) distributions, you install `zipline-reloaded` from the channel `conda-forge` like so:
+If you are using the [Anaconda](https://www.anaconda.com/products/individual) or [miniconda](https://docs.conda.io/en/latest/miniconda.html) distributions, you can install the upstream `zipline-reloaded` from the channel `conda-forge`:
 
 ```bash
 conda install -c conda-forge zipline-reloaded
 ```
 
-You can also [enable](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-channels.html) `conda-forge` by listing it in your `.condarc`.
-
-In case you are installing `zipline-reloaded` alongside other packages and encounter [conflict errors](https://github.com/conda/conda/issues/9707), consider using [mamba](https://github.com/mamba-org/mamba) instead.
-
-See the [installation](https://zipline.ml4trading.io/install.html) section of the docs for more detailed instructions and the corresponding [conda-forge site](https://github.com/conda-forge/zipline-reloaded-feedstock).
+See the [installation](https://zipline.ml4trading.io/install.html) section of the docs for more detailed instructions.
 
 ## Quickstart
 
@@ -119,4 +147,4 @@ You can find other examples in the [zipline/examples](https://github.com/stefan-
 
 ## Questions, suggestions, bugs?
 
-If you find a bug or have other questions about the library, feel free to [open an issue](https://github.com/stefan-jansen/zipline/issues/new) and fill out the template.
+If you find a bug or have other questions about the library, feel free to [open an issue](https://github.com/hariravichandran/zipline-reloaded-M1/issues/new).

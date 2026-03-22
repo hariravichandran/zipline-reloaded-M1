@@ -14,18 +14,65 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import platform
+import sys
+
 import numpy
 from Cython.Build import cythonize
 from setuptools import Extension, setup  # noqa: E402
 
 
+# --- Architecture-aware compiler flags ---
+def _get_extra_compile_args():
+    """Return compiler flags optimised for the current platform.
+
+    * Apple Silicon (arm64 / macOS): ``-mcpu=apple-m1`` lets clang emit
+      code tuned for the Apple M-series performance cores while remaining
+      compatible with M1 through M4.  ``-O3`` enables aggressive
+      optimisation (loop vectorisation, auto-NEON, …).
+    * x86_64 Linux / macOS: ``-O3 -march=native`` for best performance
+      on the build host.
+    * Fallback: ``-O3`` only.
+    """
+    machine = platform.machine().lower()
+    system = platform.system().lower()
+
+    if machine in ("arm64", "aarch64"):
+        if system == "darwin":
+            # Apple Silicon – apple-m1 target covers M1–M4
+            return ["-O3", "-mcpu=apple-m1"]
+        # Generic ARM64 (Linux aarch64, Graviton, etc.)
+        return ["-O3", "-mcpu=native"]
+    if machine in ("x86_64", "amd64"):
+        return ["-O3", "-march=native"]
+    return ["-O3"]
+
+
+_EXTRA_COMPILE_ARGS = _get_extra_compile_args()
+
+# Common macros for all extensions
+_COMMON_MACROS = [("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]
+
+
+def _make_extension(name, sources, depends=None):
+    """Helper to create an Extension with shared compiler settings."""
+    kw = dict(
+        name=name,
+        sources=sources,
+        define_macros=list(_COMMON_MACROS),
+        extra_compile_args=list(_EXTRA_COMPILE_ARGS),
+    )
+    if depends:
+        kw["depends"] = depends
+    return Extension(**kw)
+
+
 def window_specialization(typename):
     """Make an extension for an AdjustedArrayWindow specialization."""
-    return Extension(
+    return _make_extension(
         name=f"zipline.lib._{typename}window",
         sources=[f"src/zipline/lib/_{typename}window.pyx"],
         depends=["src/zipline/lib/_windowtemplate.pxi"],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
     )
 
 
@@ -34,74 +81,36 @@ ext_options = dict(
     annotate=True,
 )
 ext_modules = [
-    Extension(
-        name="zipline.assets._assets",
-        sources=["src/zipline/assets/_assets.pyx"],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-    ),
-    Extension(
-        name="zipline.assets.continuous_futures",
-        sources=["src/zipline/assets/continuous_futures.pyx"],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-    ),
-    Extension(
-        name="zipline.lib.adjustment",
-        sources=["src/zipline/lib/adjustment.pyx"],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-    ),
-    Extension(
-        name="zipline.lib._factorize",
-        sources=["src/zipline/lib/_factorize.pyx"],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-    ),
+    _make_extension("zipline.assets._assets",
+                    ["src/zipline/assets/_assets.pyx"]),
+    _make_extension("zipline.assets.continuous_futures",
+                    ["src/zipline/assets/continuous_futures.pyx"]),
+    _make_extension("zipline.lib.adjustment",
+                    ["src/zipline/lib/adjustment.pyx"]),
+    _make_extension("zipline.lib._factorize",
+                    ["src/zipline/lib/_factorize.pyx"]),
     window_specialization("float64"),
     window_specialization("int64"),
     window_specialization("int64"),
     window_specialization("uint8"),
     window_specialization("label"),
-    Extension(
-        name="zipline.lib.rank",
-        sources=["src/zipline/lib/rank.pyx"],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-    ),
-    Extension(
-        name="zipline.data._equities",
-        sources=["src/zipline/data/_equities.pyx"],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-    ),
-    Extension(
-        name="zipline.data._adjustments",
-        sources=["src/zipline/data/_adjustments.pyx"],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-    ),
-    Extension(
-        name="zipline._protocol",
-        sources=["src/zipline/_protocol.pyx"],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-    ),
-    Extension(
-        name="zipline.finance._finance_ext",
-        sources=["src/zipline/finance/_finance_ext.pyx"],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-    ),
-    Extension(
-        name="zipline.gens.sim_engine",
-        sources=["src/zipline/gens/sim_engine.pyx"],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-    ),
-    Extension(
-        name="zipline.data._minute_bar_internal",
-        sources=["src/zipline/data/_minute_bar_internal.pyx"],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-    ),
-    Extension(
-        name="zipline.data._resample",
-        sources=["src/zipline/data/_resample.pyx"],
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-    ),
+    _make_extension("zipline.lib.rank",
+                    ["src/zipline/lib/rank.pyx"]),
+    _make_extension("zipline.data._equities",
+                    ["src/zipline/data/_equities.pyx"]),
+    _make_extension("zipline.data._adjustments",
+                    ["src/zipline/data/_adjustments.pyx"]),
+    _make_extension("zipline._protocol",
+                    ["src/zipline/_protocol.pyx"]),
+    _make_extension("zipline.finance._finance_ext",
+                    ["src/zipline/finance/_finance_ext.pyx"]),
+    _make_extension("zipline.gens.sim_engine",
+                    ["src/zipline/gens/sim_engine.pyx"]),
+    _make_extension("zipline.data._minute_bar_internal",
+                    ["src/zipline/data/_minute_bar_internal.pyx"]),
+    _make_extension("zipline.data._resample",
+                    ["src/zipline/data/_resample.pyx"]),
 ]
-# for ext_module in ext_modules:
-#     ext_module.cython_directives = dict(language_level="3")
 
 setup(
     use_scm_version=True,

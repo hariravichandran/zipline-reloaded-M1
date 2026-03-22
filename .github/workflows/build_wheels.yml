@@ -45,10 +45,11 @@ jobs:
         uses: pypa/cibuildwheel@v3.3.0
         env:
           CIBW_ARCHS_LINUX: ${{ matrix.arch }}
-          CIBW_ARCHS_MACOS: x86_64 arm64
+          CIBW_ARCHS_MACOS: arm64 x86_64
           CIBW_BUILD: "${{ matrix.python }}-*"
           CIBW_SKIP: "*-musllinux_*"
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.15
+          # macOS 11.0 is minimum for arm64 (Apple Silicon) support
+          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=11.0
 
       - name: Install MSVC amd64
         uses: ilammy/msvc-dev-cmd@v1

@@ -84,6 +84,7 @@ TAGS
 
 # Python Virtual envs
 .venv
+.venv-*
 
 revision
 .python-version
