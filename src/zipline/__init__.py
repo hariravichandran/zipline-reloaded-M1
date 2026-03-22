@@ -16,6 +16,12 @@ from packaging.version import Version
 import os
 import numpy as np
 
+# Apply platform-specific performance settings (blosc threads, BLAS config,
+# numexpr threads) before any computation begins.
+from zipline.utils.platform_config import configure_for_platform as _configure
+_configure()
+del _configure
+
 # This is *not* a place to dump arbitrary classes/modules for convenience,
 # it is a place to expose the public interfaces.
 from zipline.utils.calendar_utils import get_calendar
