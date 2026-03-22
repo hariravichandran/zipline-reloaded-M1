@@ -86,13 +86,56 @@ pip install -e ".[test]"
 python tools/verify_arm_build.py
 ```
 
-### Linux / Windows
+### Linux x86_64 — From Source
+
+```bash
+# Install system dependencies
+# Ubuntu/Debian:
+sudo apt install libhdf5-dev libblosc-dev
+# Fedora/RHEL:
+# sudo dnf install hdf5-devel blosc-devel
+
+# Clone and install
+git clone https://github.com/hariravichandran/zipline-reloaded-M1.git
+cd zipline-reloaded-M1
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[test]"
+```
+
+### One-Line Setup + Benchmark (any platform)
+
+```bash
+git clone https://github.com/hariravichandran/zipline-reloaded-M1.git
+cd zipline-reloaded-M1
+bash tools/setup_and_benchmark.sh
+```
+
+This creates a venv, installs everything, verifies the build, runs the full benchmark suite, and saves results to `benchmarks/`.
+
+### From PyPI
 
 ```bash
 pip install zipline-reloaded-m1
 ```
 
 All dependencies (bcolz-zipline, tables, h5py, scipy, numpy, pandas) have pre-built wheels for all supported platforms.
+
+## Benchmarking
+
+Run the benchmark suite to measure performance on your hardware:
+
+```bash
+python tools/benchmark_suite.py --save       # run + save results
+python tools/benchmark_suite.py --quick      # quick subset
+python tools/benchmark_suite.py --json       # machine-readable output
+```
+
+Compare results across machines:
+
+```bash
+python tools/benchmark_suite.py --compare benchmarks/apple_silicon_*.json benchmarks/linux_x86_*.json
+```
 
 ### Using `conda`
 

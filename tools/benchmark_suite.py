@@ -340,12 +340,82 @@ def save_results(results):
     return path
 
 
+def compare_results(files):
+    """Compare benchmark results from multiple JSON files."""
+    datasets = []
+    for f in files:
+        with open(f) as fh:
+            datasets.append(json.load(fh))
+
+    if len(datasets) < 2:
+        print("Need at least 2 files to compare.")
+        return
+
+    # Header
+    print("\n" + "=" * 78)
+    print("  Cross-Platform Benchmark Comparison")
+    print("=" * 78)
+
+    # Machine info
+    for i, ds in enumerate(datasets):
+        p = ds["hardware_profile"]
+        print(f"\n  [{i+1}] {p['name']} | {p['cpu_name']} | {p['arch']}")
+        print(f"      {p['physical_cores']}P/{p['logical_cores']}L cores | "
+              f"{p['ram_gb']} GB RAM | BLAS={p['blas_provider']}")
+
+    # Collect all benchmark names
+    all_names = []
+    for ds in datasets:
+        for name in ds["benchmarks"]:
+            if name not in all_names:
+                all_names.append(name)
+
+    # Table
+    print("\n  " + "-" * 74)
+    header = f"  {'Benchmark':<35s}"
+    for i, ds in enumerate(datasets):
+        label = ds["hardware_profile"]["name"][:12]
+        header += f" {label:>12s}"
+    if len(datasets) == 2:
+        header += f" {'ratio':>8s}"
+    print(header)
+    print("  " + "-" * 74)
+
+    for name in all_names:
+        row = f"  {name:<35s}"
+        times = []
+        for ds in datasets:
+            b = ds["benchmarks"].get(name, {})
+            t = b.get("median_ms")
+            times.append(t)
+            if t is not None:
+                row += f" {t:>10.3f}ms"
+            else:
+                row += f" {'n/a':>12s}"
+
+        if len(datasets) == 2 and times[0] is not None and times[1] is not None:
+            ratio = times[0] / max(times[1], 0.001)
+            row += f" {ratio:>7.2f}x"
+
+        print(row)
+
+    print("  " + "-" * 74)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Zipline benchmark suite")
     parser.add_argument("--quick", action="store_true", help="Run quick subset")
     parser.add_argument("--json", action="store_true", help="Output JSON only")
     parser.add_argument("--save", action="store_true", help="Save to benchmarks/")
+    parser.add_argument(
+        "--compare", nargs="+", metavar="FILE",
+        help="Compare 2+ benchmark JSON files instead of running benchmarks",
+    )
     args = parser.parse_args()
+
+    if args.compare:
+        compare_results(args.compare)
+        return
 
     if not args.json:
         print("Zipline Benchmark Suite")
