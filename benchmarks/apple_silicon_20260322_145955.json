@@ -1,0 +1,116 @@
+{
+  "timestamp": "2026-03-22T14:59:55.338470Z",
+  "hardware_profile": {
+    "name": "apple_silicon",
+    "arch": "arm64",
+    "system": "darwin",
+    "cpu_name": "Apple M3",
+    "physical_cores": 8,
+    "logical_cores": 8,
+    "ram_gb": 24.0,
+    "blas_provider": "accelerate",
+    "capabilities": [
+      "apple_accelerate",
+      "gpu_metal",
+      "multicore",
+      "neon"
+    ],
+    "optimal_threads": 4
+  },
+  "python_version": "3.12.12",
+  "numpy_version": "2.4.3",
+  "pandas_version": "2.3.3",
+  "benchmarks": {
+    "rank_ordinal_500x100": {
+      "median_ms": 0.9422920120414346,
+      "min_ms": 0.9315000206697732,
+      "max_ms": 0.9798750106710941,
+      "runs": 5
+    },
+    "rank_ordinal_2000x500": {
+      "median_ms": 29.81820798595436,
+      "min_ms": 29.716291988734156,
+      "max_ms": 30.969540996011347,
+      "runs": 3
+    },
+    "rank_average_500x100": {
+      "median_ms": 12.513916997704655,
+      "min_ms": 12.25170900579542,
+      "max_ms": 12.98666701768525,
+      "runs": 5
+    },
+    "factorize_10k": {
+      "median_ms": 0.28050001128576696,
+      "min_ms": 0.2720409829635173,
+      "max_ms": 0.28120900969952345,
+      "runs": 5
+    },
+    "factorize_100k": {
+      "median_ms": 2.2945420059841126,
+      "min_ms": 2.281875000335276,
+      "max_ms": 2.4140419845934957,
+      "runs": 3
+    },
+    "window_500x100_w20": {
+      "median_ms": 0.16716698883101344,
+      "min_ms": 0.16620801761746407,
+      "max_ms": 0.1689589989837259,
+      "runs": 5
+    },
+    "window_2000x500_w20": {
+      "median_ms": 0.68450000253506,
+      "min_ms": 0.6762919947504997,
+      "max_ms": 0.7128339784685522,
+      "runs": 3
+    },
+    "adjustment_mutate_100x50": {
+      "median_ms": 0.002249988028779626,
+      "min_ms": 0.0021249870769679546,
+      "max_ms": 0.0031249946914613247,
+      "runs": 5
+    },
+    "nanmean_252x500": {
+      "median_ms": 0.13612498878501356,
+      "min_ms": 0.13599998783320189,
+      "max_ms": 0.14525000005960464,
+      "runs": 5
+    },
+    "nanstd_252x500": {
+      "median_ms": 0.35695801489055157,
+      "min_ms": 0.3282079997006804,
+      "max_ms": 0.375000003259629,
+      "runs": 5
+    },
+    "argsort_stable_2000x500": {
+      "median_ms": 31.228250009007752,
+      "min_ms": 30.434332991717383,
+      "max_ms": 31.493208021856844,
+      "runs": 3
+    },
+    "argsort_quick_2000x500": {
+      "median_ms": 29.737750010099262,
+      "min_ms": 29.70600000116974,
+      "max_ms": 29.84270901652053,
+      "runs": 3
+    },
+    "matmul_500x500": {
+      "median_ms": 0.6414169911295176,
+      "min_ms": 0.6277920037973672,
+      "max_ms": 0.6679589860141277,
+      "runs": 5
+    },
+    "linregress_252x100": {
+      "median_ms": 9.447582997381687,
+      "min_ms": 9.173166996333748,
+      "max_ms": 9.539207996567711,
+      "runs": 3
+    },
+    "import_zipline": {
+      "median_ms": 0.020540988771244884,
+      "min_ms": 0.020540988771244884,
+      "max_ms": 0.020540988771244884,
+      "runs": 1,
+      "note": "single run (import is cached after first)"
+    }
+  }
+}
