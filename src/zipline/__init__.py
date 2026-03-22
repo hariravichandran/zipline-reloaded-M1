@@ -19,6 +19,7 @@ import numpy as np
 # Apply platform-specific performance settings (blosc threads, BLAS config,
 # numexpr threads) before any computation begins.
 from zipline.utils.platform_config import configure_for_platform as _configure
+
 _configure()
 del _configure
 

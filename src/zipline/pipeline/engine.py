@@ -291,9 +291,11 @@ class SimplePipelineEngine(PipelineEngine):
             if self._parallel_chunks:
                 try:
                     from zipline.utils.hardware_profile import get_profile
+
                     self._max_workers = get_profile().optimal_threads
                 except Exception:
                     import os
+
                     self._max_workers = os.cpu_count() or 1
             else:
                 self._max_workers = 1
@@ -383,8 +385,7 @@ class SimplePipelineEngine(PipelineEngine):
 
         with ThreadPoolExecutor(max_workers=max_workers) as pool:
             future_to_idx = {
-                pool.submit(run_pipeline, s, e): i
-                for i, (s, e) in enumerate(ranges)
+                pool.submit(run_pipeline, s, e): i for i, (s, e) in enumerate(ranges)
             }
             for future in as_completed(future_to_idx):
                 idx = future_to_idx[future]

@@ -35,6 +35,7 @@ def configure_for_platform():
 
     try:
         from zipline.utils.hardware_profile import get_profile
+
         profile = get_profile()
     except Exception:
         return
@@ -55,6 +56,7 @@ def _configure_blosc(profile):
     """Set blosc thread count for bcolz decompression."""
     try:
         import blosc
+
         blosc.set_nthreads(profile.blosc_nthreads)
     except ImportError:
         pass
@@ -81,6 +83,7 @@ def _configure_threading(profile):
         os.environ.setdefault("VECLIB_MAXIMUM_THREADS", threads)
         try:
             import numexpr
+
             numexpr.set_num_threads(profile.optimal_threads)
         except (ImportError, AttributeError):
             pass
@@ -94,6 +97,7 @@ def _configure_threading(profile):
         os.environ.setdefault("OPENBLAS_NUM_THREADS", threads)
         try:
             import numexpr
+
             numexpr.set_num_threads(profile.optimal_threads)
         except (ImportError, AttributeError):
             pass
@@ -103,6 +107,7 @@ def _configure_threading(profile):
         os.environ.setdefault("OPENBLAS_NUM_THREADS", threads)
         try:
             import numexpr
+
             numexpr.set_num_threads(profile.optimal_threads)
         except (ImportError, AttributeError):
             pass

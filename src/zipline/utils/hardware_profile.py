@@ -35,16 +35,16 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Capability flags — used by optimization code to decide what to enable
 # ---------------------------------------------------------------------------
-CAP_NEON = "neon"                    # ARM NEON SIMD
-CAP_AVX2 = "avx2"                   # x86 AVX2 SIMD
-CAP_AVX512 = "avx512"               # x86 AVX-512
-CAP_ACCELERATE = "apple_accelerate" # Apple Accelerate (vDSP/vecLib)
-CAP_MKL = "mkl"                     # Intel MKL
-CAP_OPENBLAS = "openblas"           # OpenBLAS
-CAP_GPU_METAL = "gpu_metal"         # Apple Metal (GPU compute)
-CAP_GPU_CUDA = "gpu_cuda"           # NVIDIA CUDA
-CAP_GPU_ROCM = "gpu_rocm"           # AMD ROCm
-CAP_MULTICORE = "multicore"         # >1 performance core available
+CAP_NEON = "neon"  # ARM NEON SIMD
+CAP_AVX2 = "avx2"  # x86 AVX2 SIMD
+CAP_AVX512 = "avx512"  # x86 AVX-512
+CAP_ACCELERATE = "apple_accelerate"  # Apple Accelerate (vDSP/vecLib)
+CAP_MKL = "mkl"  # Intel MKL
+CAP_OPENBLAS = "openblas"  # OpenBLAS
+CAP_GPU_METAL = "gpu_metal"  # Apple Metal (GPU compute)
+CAP_GPU_CUDA = "gpu_cuda"  # NVIDIA CUDA
+CAP_GPU_ROCM = "gpu_rocm"  # AMD ROCm
+CAP_MULTICORE = "multicore"  # >1 performance core available
 
 
 @dataclass(frozen=True)
@@ -52,20 +52,20 @@ class HardwareProfile:
     """Description of the runtime hardware and its optimisation knobs."""
 
     name: str
-    arch: str                     # "arm64", "x86_64", etc.
-    system: str                   # "darwin", "linux", "windows"
-    cpu_name: str                 # human-readable CPU identifier
+    arch: str  # "arm64", "x86_64", etc.
+    system: str  # "darwin", "linux", "windows"
+    cpu_name: str  # human-readable CPU identifier
     physical_cores: int
     logical_cores: int
     ram_gb: float
-    blas_provider: str            # "accelerate", "mkl", "openblas", "unknown"
+    blas_provider: str  # "accelerate", "mkl", "openblas", "unknown"
     capabilities: frozenset = field(default_factory=frozenset)
 
     # Tuning knobs — consumers can read these to configure behaviour
-    optimal_threads: int = 1      # recommended thread count for compute
+    optimal_threads: int = 1  # recommended thread count for compute
     sort_algorithm: str = "stable"  # numpy sort kind for ranking
     use_parallel_pipeline: bool = False  # enable threaded pipeline execution
-    blosc_nthreads: int = 1       # blosc decompression threads
+    blosc_nthreads: int = 1  # blosc decompression threads
 
     def has(self, capability: str) -> bool:
         """Check if this profile has a specific capability."""
@@ -86,13 +86,15 @@ class HardwareProfile:
 # Detection helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_cpu_name() -> str:
     system = platform.system().lower()
     if system == "darwin":
         try:
             out = subprocess.check_output(
                 ["sysctl", "-n", "machdep.cpu.brand_string"],
-                text=True, timeout=5,
+                text=True,
+                timeout=5,
             ).strip()
             if out:
                 return out
@@ -115,9 +117,10 @@ def _get_ram_gb() -> float:
         try:
             out = subprocess.check_output(
                 ["sysctl", "-n", "hw.memsize"],
-                text=True, timeout=5,
+                text=True,
+                timeout=5,
             ).strip()
-            return int(out) / (1024 ** 3)
+            return int(out) / (1024**3)
         except Exception:
             pass
     if system == "linux":
@@ -126,7 +129,7 @@ def _get_ram_gb() -> float:
                 for line in f:
                     if line.startswith("MemTotal"):
                         kb = int(line.split()[1])
-                        return kb / (1024 ** 2)
+                        return kb / (1024**2)
         except Exception:
             pass
     return 0.0
@@ -146,7 +149,7 @@ def _detect_blas() -> str:
 
         if isinstance(info, dict):
             libs = info.get("libraries", [])
-            lib_str = " ".join(str(l) for l in libs).lower()
+            lib_str = " ".join(str(lib) for lib in libs).lower()
         else:
             lib_str = str(info).lower()
 
@@ -198,7 +201,8 @@ def _detect_x86_simd() -> set:
         try:
             out = subprocess.check_output(
                 ["sysctl", "-n", "machdep.cpu.features"],
-                text=True, timeout=5,
+                text=True,
+                timeout=5,
             ).lower()
             if "avx2" in out:
                 caps.add(CAP_AVX2)
@@ -221,7 +225,9 @@ def _detect_gpu() -> set:
     # NVIDIA CUDA
     try:
         subprocess.check_output(
-            ["nvidia-smi"], timeout=5, stderr=subprocess.DEVNULL,
+            ["nvidia-smi"],
+            timeout=5,
+            stderr=subprocess.DEVNULL,
         )
         caps.add(CAP_GPU_CUDA)
     except Exception:
@@ -230,7 +236,9 @@ def _detect_gpu() -> set:
     # AMD ROCm
     try:
         subprocess.check_output(
-            ["rocm-smi"], timeout=5, stderr=subprocess.DEVNULL,
+            ["rocm-smi"],
+            timeout=5,
+            stderr=subprocess.DEVNULL,
         )
         caps.add(CAP_GPU_ROCM)
     except Exception:
@@ -242,6 +250,7 @@ def _detect_gpu() -> set:
 # ---------------------------------------------------------------------------
 # Profile builders
 # ---------------------------------------------------------------------------
+
 
 def _build_apple_silicon_profile(
     cpu_name: str,
@@ -381,6 +390,7 @@ def _build_generic_profile(
 # Public API
 # ---------------------------------------------------------------------------
 
+
 @lru_cache(maxsize=1)
 def detect_profile() -> HardwareProfile:
     """Auto-detect the current hardware and return an appropriate profile."""
@@ -398,7 +408,8 @@ def detect_profile() -> HardwareProfile:
             try:
                 out = subprocess.check_output(
                     ["sysctl", "-n", "hw.physicalcpu"],
-                    text=True, timeout=5,
+                    text=True,
+                    timeout=5,
                 ).strip()
                 physical = int(out)
             except Exception:
@@ -409,18 +420,34 @@ def detect_profile() -> HardwareProfile:
 
     if machine == "arm64" and system == "darwin":
         return _build_apple_silicon_profile(
-            cpu_name, physical, logical, ram_gb, blas, gpu_caps,
+            cpu_name,
+            physical,
+            logical,
+            ram_gb,
+            blas,
+            gpu_caps,
         )
 
     if machine in ("x86_64", "amd64") and system == "linux":
         simd_caps = _detect_x86_simd()
         return _build_linux_x86_profile(
-            cpu_name, physical, logical, ram_gb, blas, simd_caps, gpu_caps,
+            cpu_name,
+            physical,
+            logical,
+            ram_gb,
+            blas,
+            simd_caps,
+            gpu_caps,
         )
 
     if machine == "aarch64" and system == "linux":
         return _build_linux_arm_profile(
-            cpu_name, physical, logical, ram_gb, blas, gpu_caps,
+            cpu_name,
+            physical,
+            logical,
+            ram_gb,
+            blas,
+            gpu_caps,
         )
 
     return _build_generic_profile(cpu_name, physical, logical, ram_gb, blas)
@@ -438,7 +465,6 @@ def get_profile() -> HardwareProfile:
     2. The ``ZIPLINE_HARDWARE_PROFILE`` environment variable
     3. Auto-detection
     """
-    global _forced_profile
     if _forced_profile is not None:
         return _forced_profile
 
@@ -449,7 +475,8 @@ def get_profile() -> HardwareProfile:
             logger.info(
                 "ZIPLINE_HARDWARE_PROFILE=%s requested but detected %s; "
                 "using detected profile",
-                env_name, profile.name,
+                env_name,
+                profile.name,
             )
         return profile
 
